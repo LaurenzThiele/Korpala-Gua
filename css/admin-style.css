@@ -1,0 +1,418 @@
+/* -------------------------
+   Helper
+------------------------- */
+.hidden { 
+  display: none !important; 
+}
+
+
+/* Toast container fixed on bottom-right */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+/* Toast box */
+.toast {
+  min-width: 220px;
+  padding: 12px 18px;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateX(30px);
+  animation: slide-in 0.35s forwards;
+}
+
+/* Success = green */
+.toast.success {
+  background-color: #3bb54a;
+}
+
+/* Error = red */
+.toast.error {
+  background-color: #e04949;
+}
+
+/* Exit animation */
+.toast.hide {
+  animation: fade-out 0.4s forwards;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(30px); }
+}
+
+
+/* -------------------------
+   TOP ACTION BUTTONS
+------------------------- */
+#modeButtons {
+  width: 100%;
+  max-width: 420px;  
+  margin: 40px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#modeButtons .separator {
+  margin: 20px 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  color: var(--color-text);
+  opacity: 0.7;
+  font-size: var(--font-small);
+}
+
+#modeButtons .separator::before,
+#modeButtons .separator::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--color-text);
+  opacity: 0.5;
+}
+
+#modeButtons .separator span {
+  margin: 0 12px;
+}
+
+/* Base style for button + select */
+#modeButtons button,
+#modeButtons select {
+  width: 100%;
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  color: var(--color-text);
+  padding: 12px 20px;
+  font-size: var(--font-medium);
+  font-weight: bold;
+  letter-spacing: var(--space-tight);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border 0.3s ease;
+  outline: none;
+
+  appearance: none; 
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Hover style */
+#modeButtons button:hover,
+#modeButtons select:hover {
+  background-color: transparent;
+}
+
+/* When select is opened or focused = same as hover */
+#modeButtons select:focus,
+#modeButtons select:active,
+#modeButtons select:focus-visible {
+  background-color: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* Dropdown panel (options list) */
+#modeButtons select option {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-weight: bold;
+  padding: 10px;
+}
+
+/* Option hover inside dropdown */
+#modeButtons select option:hover,
+#modeButtons select option:focus,
+#modeButtons select option:active {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+/* Select wrapper and arrows */
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  z-index: 0; /* container below input */
+}
+
+.select-wrapper select {
+  width: 100%;
+  padding-right: 44px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 2px solid var(--color-primary);
+  border-radius: 6px;
+  appearance: none;
+  line-height: normal;
+  position: relative;
+  z-index: 1; /* ensure select receives clicks */
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  color: var(--color-text);
+  z-index: 1;
+}
+
+.select-arrow .arrow-up {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.select-arrow .arrow-down {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.select-wrapper select:focus + .select-arrow .arrow-down {
+  opacity: 0;
+}
+
+.select-wrapper select:focus + .select-arrow .arrow-up {
+  opacity: 1;
+}
+
+/* -------------------------
+  Form
+------------------------- */
+form {
+  border-radius: 8px;
+  border: 2px solid var(--color-primary);
+  padding: 16px 24px;
+  color: var(--color-text);
+  font-size: var(--font-medium);
+}
+
+/* Form header */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.form-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--color-secondary);
+}
+
+/* Delete button */
+#btnDelete {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+  color: var(--color-primary);
+}
+
+#btnDelete:hover {
+  background: rgba(255, 0, 0, 0.15);
+}
+
+/* Form layout */
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-bottom: 20px;
+  position: relative; /* allow focus-within */
+}
+
+/* Full-width elements */
+.form-group textarea,
+.form-group:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+label {
+  font-weight: bold;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Inputs / focusable adjustments */
+.form-group > * {
+  min-width: auto; /* override Chrome grid pointer issue */
+  position: relative;
+  z-index: 1;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-text);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--color-text);
+}
+
+/* Focus styles */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+input[type="file"]:focus {
+  border-color: var(--color-secondary);
+  outline: none;
+}
+
+/* Optional: highlight wrapper on focus for file/select */
+.form-group:focus-within {
+  border-color: var(--color-secondary);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* File input small tweak */
+input[type="file"] {
+  padding: 6px;
+}
+
+/* File wrapper example */
+.file-wrapper:focus-within {
+  border-color: var(--color-secondary);
+}
+
+/* Map div full width */
+.map {
+  height: 400px;
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Image */
+.caveImagePreview {
+  width: 100%;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  border-radius: 8px; /* optional if you want the wrapper rounded */
+  max-height: 70vh;   /* maximum height for the preview area */
+}
+.caveImagePreview img {
+  max-width: 100%;  /* scales down if image too wide */
+  max-height: 70vh; /* ensures image doesn’t exceed viewport height */
+  width: auto;      /* preserves original aspect ratio */
+  height: auto;     /* preserves original aspect ratio */
+  border-radius: 8px; /* optional: corner rounding */
+  display: block;
+}
+.caveImagePreview iframe {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+}
+.caveImagePreview iframe::-webkit-scrollbar {
+  display: none;                /* Chrome */
+}
+.caveImagePreview .pdf-viewer {
+  display: flex;            /* use flexbox */
+  justify-content: center;  /* center horizontally */
+  max-width: 100%;  /* scales down if image too wide */
+  max-height: 70vh; /* ensures image doesn’t exceed viewport height */
+  width: auto;      /* preserves original aspect ratio */
+  height: auto;     /* preserves original aspect ratio */
+  border-radius: 8px; /* optional: corner rounding */
+}
+.caveImagePreview .pdf-viewer canvas {
+  display: block;
+}
+
+
+/* Submit button */
+button[type="submit"] {
+  margin-top: 24px;
+  padding: 12px 20px;
+  background: var(--color-primary);
+  border: none;
+  color: var(--color-text);
+  border-radius: 6px;
+  border: 2px solid var(--color-primary);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  width: 100%;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--color-bg);
+}
+
+
+/* -------------------------
+   Admin modal
+------------------------- */
+#adminLoginOverlay {
+  display: flex;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.7);
+}
+#adminLoginForm {
+  background: var(--color-bg);
+  padding: 2em;
+  border-radius: 8px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+#adminLoginForm .form-group {
+  grid-template-columns: 1fr;
+}
+#adminLoginError {
+  color: #e04949;
+  font-size: 0.9em;
+  min-height: 1em;
+}

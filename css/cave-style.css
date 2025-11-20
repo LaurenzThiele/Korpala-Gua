@@ -1,0 +1,131 @@
+
+/* -------------------------
+   Helper
+------------------------- */
+.hidden { 
+  display: none !important; 
+}
+
+#content-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 400px;
+    margin-bottom: 20px;
+}
+#info {
+    flex: 0 0 auto;
+    margin-right: 54px;
+    border-radius: 8px;
+    border: 2px solid var(--color-primary);
+    padding: 16px 24px;
+    color: var(--color-text);
+    font-size: var(--font-medium);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+  
+#info strong {
+    color: var(--color-secondary);
+    letter-spacing: var(--space-wide);
+    font-size: var(--font-small);
+}
+
+#info span {   
+    font-size: var(--font-small);
+    letter-spacing: var(--space-tight);
+    margin: 8px 0;
+}
+
+#map {
+    flex: 1 1 auto;   /* take remaining space */ /* keep your base height */
+    border-radius: 12px;
+    border: 2px solid var(--color-text);
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    margin: 0px;
+    outline: none;
+    height: 400px;
+}
+#map.ctrl-active {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+
+/* Image */
+h2 {
+    color: var(--color-secondary);
+    font-size: var(--font-xlarge);
+    letter-spacing: var(--space-wide);
+    line-height: 1.12;
+    text-align: center;
+    margin: 0px;
+    margin-bottom: 24px;
+    margin-top: 36px;
+}
+.caveImagePreview {
+  width: 100%;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  border-radius: 8px; /* optional if you want the wrapper rounded */
+  max-height: 70vh;   /* maximum height for the preview area */
+}
+.caveImagePreview img {
+  max-width: 100%;  /* scales down if image too wide */
+  max-height: 70vh; /* ensures image doesn’t exceed viewport height */
+  width: auto;      /* preserves original aspect ratio */
+  height: auto;     /* preserves original aspect ratio */
+  border-radius: 8px; /* optional: corner rounding */
+  display: block;
+}
+.caveImagePreview iframe {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+}
+.caveImagePreview iframe::-webkit-scrollbar {
+  display: none;                /* Chrome */
+}
+.caveImagePreview .pdf-viewer {
+  display: flex;            /* use flexbox */
+  justify-content: center;  /* center horizontally */
+  max-width: 100%;  /* scales down if image too wide */
+  max-height: 70vh; /* ensures image doesn’t exceed viewport height */
+  width: auto;      /* preserves original aspect ratio */
+  height: auto;     /* preserves original aspect ratio */
+  border-radius: 8px; /* optional: corner rounding */
+}
+.caveImagePreview .pdf-viewer canvas {
+  display: block;
+}
+
+
+@media (max-width: 768px) {
+    #content-wrapper {
+      flex-direction: column;   /* stack vertically on mobile */
+    }
+  
+    #info {
+      margin-right: 0;          /* remove horizontal spacing */
+      margin-bottom: 20px;      /* add space before the map */
+      grid-template-columns: 1fr 1fr; /* enable 2 columns */
+      display: grid;
+      gap: 8px 16px;
+    }
+
+    #info span {   
+        display: block; 
+    }
+  
+    #map {
+      width: 100%;  /* ensures it stretches full width when below */
+    }
+  }
+
+

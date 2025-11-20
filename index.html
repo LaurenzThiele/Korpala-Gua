@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Korpala | Gua Indonesia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="images/korpala_logo.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/index-style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo-container">
+    <img src="images/korpala_logo.png" alt="Korpala Logo" class="logo">
+  </div>
+  <h1>Gua Indonesia</h1> 
+  <p> Gua-gua Indonesia menyimpan kekayaan alam, sejarah, dan ekosistem yang luar biasa. Melalui proyek pemetaan ini, Korpala Universitas Hasanuddin berupaya mendokumentasikan lokasi, karakteristik, dan potensi setiap gua secara akurat dan dapat diakses oleh publik. <br><br> Peta interaktif ini dibangun untuk mendukung kegiatan eksplorasi, penelitian, keselamatan perjalanan, serta pelestarian lingkungan karst di seluruh Nusantara. Dengan menggabungkan data lapangan, teknologi pemetaan, dan semangat kepencintaalaman, kami berharap platform ini menjadi sumber informasi terpercaya bagi penjelajah, peneliti, dan masyarakat yang ingin mengenal lebih jauh dunia bawah tanah Indonesia. <br><br> Eksplorasi yang bertanggung jawab adalah kunci. Mari bersama menjaga dan melestarikan warisan alam Indonesia. </p>
+</header>
+
+<div id="map"></div>
+
+<table id="caveTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nama</th>
+      <th>Daerah</th>
+      <th>Jenis</th>
+      <th>Kedalaman (m)</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th><select id="region-filter"><option value="">Semua</option></select></th>
+      <th><select id="type-filter"><option value="">Semua</option></select></th>
+      <th>
+      <input type="number" id="depth-min" placeholder="Min" min="0"/>
+      <input type="number" id="depth-max" placeholder="Max" min="1" />
+    </th>
+    </tr>
+  </tfoot>
+</table>
+
+<footer>
+  <img src="images/korpala_logo_speleogi.png" alt="Korpala Logo Wide" class="logo-wide">
+  <p>&copy; 2025 Korpala Universitas Hasanuddin. All rights reserved.</p>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>

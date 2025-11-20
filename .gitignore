@@ -1,0 +1,7 @@
+.env
+info.txt
+supabase/.temp/
+supabase/config.toml
+supabase/.branches/
+supabase/migrations/.meta/
+.vscode/*
