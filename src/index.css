@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-red: rgb(234, 2, 6);
+  --color-brand-yellow: rgb(248, 245, 4);
+
+  --font-display: "Fjalla One", sans-serif;
+  --font-mono: "JetBrains Mono", "Menlo", monospace;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  margin: 0;
+  background-color: #0c0c0c;
+  color: #ededed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: rgba(234, 2, 6, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0c0c0c; }
+::-webkit-scrollbar-thumb { background: #282828; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #383838; }
+
+/* CTRL+scroll zoom indicator */
+.ctrl-active {
+  outline: 2px solid rgb(234, 2, 6) !important;
+  outline-offset: -2px;
+}
+
+/* Leaflet dark UI overrides */
+.leaflet-popup-content-wrapper {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: #141414 !important;
+  color: #ededed;
+  border-radius: 12px !important;
+  min-width: 190px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+.leaflet-popup-content-wrapper .leaflet-popup-content {
+  margin: 10px 14px;
+  line-height: 1.55;
+}
+.leaflet-popup-close-button {
+  color: #505050 !important;
+  font-size: 16px !important;
+  top: 8px !important;
+  right: 10px !important;
+}
+.leaflet-popup-close-button:hover { color: #a0a0a0 !important; }
+.leaflet-popup-tip { background-color: #141414 !important; }
+.leaflet-control-attribution {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  color: #505050 !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a { color: #707070 !important; }
+.leaflet-control-zoom a {
+  background-color: #141414 !important;
+  color: #ededed !important;
+  border-color: #252525 !important;
+}
+.leaflet-control-zoom a:hover { background-color: #202020 !important; }
+
+/* Toast animations */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.96); }
+}
+.animate-toast-in  { animation: toast-in  0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-toast-out { animation: toast-out 0.18s ease-in forwards; }
