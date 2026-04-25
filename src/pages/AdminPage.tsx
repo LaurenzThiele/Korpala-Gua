@@ -3,6 +3,24 @@ import { Link } from 'react-router-dom';
 import { LuArrowLeft, LuChevronDown, LuTrash2 } from 'react-icons/lu';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+
+async function deleteStorageFile(filename: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/cave-images/${filename}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message ?? `Storage delete failed: ${res.status}`);
+  }
+}
 import type { Cave } from '../types/cave';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -301,7 +319,7 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
       };
 
       if (removeFile && !file && cave.image_ext) {
-        await supabase.storage.from('cave-images').remove([`${cave.id}.${cave.image_ext}`]);
+        await deleteStorageFile(`${cave.id}.${cave.image_ext}`);
         updateObj.image_ext = null;
       }
 
@@ -312,8 +330,7 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
           .from('cave-images').upload(filename, file);
 
         if (uploadError) {
-          // File already exists — delete it first, then re-upload
-          await supabase.storage.from('cave-images').remove([filename]);
+          await deleteStorageFile(filename);
           const { error: retryError } = await supabase.storage
             .from('cave-images').upload(filename, file);
           if (retryError) throw new Error('Upload gagal. Perubahan tidak disimpan.');
@@ -339,7 +356,7 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
     setBusy(true);
     try {
       if (cave.image_ext) {
-        await supabase.storage.from('cave-images').remove([`${cave.id}.${cave.image_ext}`]);
+        await deleteStorageFile(`${cave.id}.${cave.image_ext}`);
       }
       const { error } = await supabase.from('caves').delete().eq('id', cave.id);
       if (error) throw error;
