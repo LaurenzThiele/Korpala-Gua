@@ -7,4 +7,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    // Proxies to a standalone functions server (start it separately: `netlify functions:serve`, default port 9999).
+    proxy: {
+      '/api': 'http://localhost:9999',
+    },
+  },
 })

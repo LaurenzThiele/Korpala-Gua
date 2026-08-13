@@ -1,32 +1,34 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LuArrowLeft, LuChevronDown, LuTrash2 } from 'react-icons/lu';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-
-async function deleteStorageFile(filename: string): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/cave-images/${filename}`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-    }
-  );
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? `Storage delete failed: ${res.status}`);
-  }
-}
+import { authClient } from '../lib/auth';
+import { getCaves, createCave, updateCave, deleteCave, uploadFile, deleteFile, getImageUrl } from '../lib/api';
 import type { Cave } from '../types/cave';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { MapPicker } from '../components/MapPicker';
 import { FilePreview } from '../components/FilePreview';
 import { useToast } from '../context/ToastContext';
+
+// ─── Error helpers ────────────────────────────────────────────────────────────
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof (err as { message?: unknown }).message === 'string'
+  ) {
+    return (err as { message: string }).message;
+  }
+  if (typeof err === 'string') return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return 'Terjadi kesalahan yang tidak diketahui';
+  }
+}
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
@@ -63,7 +65,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ─── Login Overlay ────────────────────────────────────────────────────────────
 
-function LoginOverlay({ onLogin }: { onLogin: (s: Session) => void }) {
+function LoginOverlay({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -73,11 +75,11 @@ function LoginOverlay({ onLogin }: { onLogin: (s: Session) => void }) {
     e.preventDefault();
     setBusy(true);
     setError('');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.session) {
-      setError(error?.message ?? 'Login gagal');
+    const { error } = await authClient.signIn.email({ email, password });
+    if (error) {
+      setError(getErrorMessage(error) || 'Login gagal');
     } else {
-      onLogin(data.session);
+      onLogin();
     }
     setBusy(false);
   };
@@ -170,29 +172,24 @@ function AddCaveForm({ onSuccess }: { onSuccess: () => void }) {
         utm_y: utmY,
       };
 
-      const { data: inserted, error: insertError } = await supabase
-        .from('caves').insert([payload]).select().single();
-
-      if (insertError || !inserted) throw insertError ?? new Error('Insert failed');
+      const inserted = await createCave(payload);
 
       if (file) {
         const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
         const filename = `${inserted.id}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('cave-images').upload(filename, file);
-
-        if (uploadError) {
-          await supabase.from('caves').delete().eq('id', inserted.id);
+        try {
+          await uploadFile(filename, file);
+        } catch {
+          await deleteCave(inserted.id);
           throw new Error('Upload gagal. Gua tidak disimpan.');
         }
-
-        await supabase.from('caves').update({ image_ext: ext }).eq('id', inserted.id);
+        await updateCave(inserted.id, { image_ext: ext });
       }
 
       showToast('Gua berhasil ditambahkan');
       onSuccess();
     } catch (err) {
-      showToast('Gagal: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      showToast('Gagal: ' + getErrorMessage(err), 'error');
     } finally {
       setBusy(false);
     }
@@ -287,7 +284,15 @@ function AddCaveForm({ onSuccess }: { onSuccess: () => void }) {
 
 // ─── Edit Cave Form ───────────────────────────────────────────────────────────
 
-function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }) {
+function EditCaveForm({
+  cave,
+  onSaved,
+  onDeleted,
+}: {
+  cave: Cave;
+  onSaved: (cave: Cave) => void;
+  onDeleted: () => void;
+}) {
   const showToast = useToast();
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState(cave.name);
@@ -300,9 +305,7 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
   const [removeFile, setRemoveFile] = useState(false);
-  const existingUrl = cave.image_ext
-    ? supabase.storage.from('cave-images').getPublicUrl(`${cave.id}.${cave.image_ext}`).data.publicUrl
-    : null;
+  const existingUrl = cave.image_ext ? getImageUrl(cave.id, cave.image_ext) : null;
 
   const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
@@ -319,33 +322,31 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
       };
 
       if (removeFile && !file && cave.image_ext) {
-        await deleteStorageFile(`${cave.id}.${cave.image_ext}`);
+        await deleteFile(`${cave.id}.${cave.image_ext}`);
         updateObj.image_ext = null;
       }
 
       if (file) {
         const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
         const filename = `${cave.id}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('cave-images').upload(filename, file);
-
-        if (uploadError) {
-          await deleteStorageFile(filename);
-          const { error: retryError } = await supabase.storage
-            .from('cave-images').upload(filename, file);
-          if (retryError) throw new Error('Upload gagal. Perubahan tidak disimpan.');
+        try {
+          await uploadFile(filename, file);
+        } catch {
+          throw new Error('Upload gagal. Perubahan tidak disimpan.');
         }
-
         updateObj.image_ext = ext;
       }
 
-      const { error } = await supabase.from('caves').update(updateObj).eq('id', cave.id);
-      if (error) throw error;
+      const updated = await updateCave(cave.id, updateObj);
+
+      setFile(null);
+      setRemoveFile(false);
+      setFileKey(k => k + 1);
 
       showToast('Gua berhasil diperbarui');
-      onSuccess();
+      onSaved(updated);
     } catch (err) {
-      showToast('Gagal: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      showToast('Gagal: ' + getErrorMessage(err), 'error');
     } finally {
       setBusy(false);
     }
@@ -356,14 +357,13 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
     setBusy(true);
     try {
       if (cave.image_ext) {
-        await deleteStorageFile(`${cave.id}.${cave.image_ext}`);
+        await deleteFile(`${cave.id}.${cave.image_ext}`);
       }
-      const { error } = await supabase.from('caves').delete().eq('id', cave.id);
-      if (error) throw error;
+      await deleteCave(cave.id);
       showToast('Gua berhasil dihapus');
-      onSuccess();
+      onDeleted();
     } catch (err) {
-      showToast('Gagal: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      showToast('Gagal: ' + getErrorMessage(err), 'error');
     } finally {
       setBusy(false);
     }
@@ -504,34 +504,37 @@ function EditCaveForm({ cave, onSuccess }: { cave: Cave; onSuccess: () => void }
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
 
 export function AdminPage() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<'add' | 'edit'>('add');
   const [caves, setCaves] = useState<Cave[]>([]);
   const [selectedCave, setSelectedCave] = useState<Cave | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    authClient.getSession().then(({ data }) => {
+      setAuthed(Boolean(data?.session));
       setChecking(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setSession(session);
-    });
-    return () => listener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    supabase.from('caves').select('*').order('name', { ascending: true })
-      .then(({ data }) => setCaves(data ?? []));
-  }, [session]);
+    getCaves().then(setCaves).catch(() => setCaves([]));
+  }, [authed]);
 
   async function loadCaves() {
-    const { data } = await supabase.from('caves').select('*').order('name', { ascending: true });
-    setCaves(data ?? []);
+    setCaves(await getCaves());
   }
 
-  function handleSuccess() {
+  function handleAddSuccess() {
+    loadCaves();
+  }
+
+  function handleCaveSaved(updated: Cave) {
+    setSelectedCave(updated);
+    setCaves(cs => cs.map(c => (c.id === updated.id ? updated : c)));
+  }
+
+  function handleCaveDeleted() {
     setSelectedCave(null);
     loadCaves();
   }
@@ -546,16 +549,16 @@ export function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] text-[#ededed] flex flex-col">
-      {!session && <LoginOverlay onLogin={s => setSession(s)} />}
+      {!authed && <LoginOverlay onLogin={() => setAuthed(true)} />}
 
       <div className="max-w-4xl mx-auto w-full px-5 sm:px-8 py-6 flex flex-col flex-1 box-border">
         <Header
           showBack
           right={
-            session && (
+            authed && (
               <button
                 type="button"
-                onClick={() => supabase.auth.signOut()}
+                onClick={() => { authClient.signOut(); setAuthed(false); }}
                 className="text-[11px] font-display uppercase tracking-[2px] border border-[#282828] text-[#606060] rounded-lg px-4 py-2 transition-all hover:border-brand-red hover:text-brand-red bg-transparent cursor-pointer"
               >
                 Sign Out
@@ -625,11 +628,16 @@ export function AdminPage() {
 
         {/* Forms */}
         {activeTab === 'add' && (
-          <AddCaveForm onSuccess={handleSuccess} />
+          <AddCaveForm onSuccess={handleAddSuccess} />
         )}
 
         {activeTab === 'edit' && selectedCave && (
-          <EditCaveForm key={selectedCave.id} cave={selectedCave} onSuccess={handleSuccess} />
+          <EditCaveForm
+            key={selectedCave.id}
+            cave={selectedCave}
+            onSaved={handleCaveSaved}
+            onDeleted={handleCaveDeleted}
+          />
         )}
 
         {activeTab === 'edit' && !selectedCave && (

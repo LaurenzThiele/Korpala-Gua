@@ -1,3 +1,10 @@
 [build]
   command = "npm run build"
   publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+# Local dev: run `netlify functions:serve` (port 9999) and `npm run dev` (port 5173) in two
+# terminals — vite.config.ts proxies /api to the functions server. Don't use `netlify dev`;
+# its combined proxy is currently broken with Vite 8 (serves broken JS/HTML for asset requests).

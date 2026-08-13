@@ -11,7 +11,7 @@ import {
 } from 'react-icons/lu';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { supabase } from '../lib/supabase';
+import { getCaves } from '../lib/api';
 import { utmToLatLon } from '../lib/utils';
 import type { Cave } from '../types/cave';
 import { Header } from '../components/Header';
@@ -108,11 +108,8 @@ export function HomePage() {
   // Fetch caves
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase.from('caves').select('*');
-      if (error) {
-        setFetchError('Terjadi gangguan pada sistem. Silakan coba lagi nanti.');
-      } else {
-        const list: Cave[] = data ?? [];
+      try {
+        const list = await getCaves();
         setCaves(list);
         if (mapRef.current) {
           const icon = new L.Icon({
@@ -135,6 +132,8 @@ export function HomePage() {
             markersRef.current[cave.id] = marker;
           });
         }
+      } catch {
+        setFetchError('Terjadi gangguan pada sistem. Silakan coba lagi nanti.');
       }
       setLoading(false);
     }

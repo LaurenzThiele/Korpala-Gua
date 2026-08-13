@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { supabase } from '../lib/supabase';
+import { getCave, getImageUrl } from '../lib/api';
 import { utmToLatLon } from '../lib/utils';
 import type { Cave } from '../types/cave';
 import { Header } from '../components/Header';
@@ -38,19 +38,15 @@ export function CaveDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    const caveId = id;
     async function load() {
-      const { data, error } = await supabase
-        .from('caves').select('*').eq('id', id).single();
-
-      if (error || !data) {
+      try {
+        const c = await getCave(caveId);
+        setCave(c);
+        document.title = `Korpala | ${c.name}`;
+      } catch {
         setNotFound(true);
-        setLoading(false);
-        return;
       }
-
-      const c: Cave = data;
-      setCave(c);
-      document.title = `Korpala | ${c.name}`;
       setLoading(false);
     }
     load();
@@ -235,7 +231,7 @@ export function CaveDetailPage() {
 
         {/* File preview */}
         {c.image_ext && (() => {
-          const fileUrl = supabase.storage.from('cave-images').getPublicUrl(`${c.id}.${c.image_ext}`).data.publicUrl;
+          const fileUrl = getImageUrl(c.id, c.image_ext);
           return (
             <section className="mb-10">
               <div className="border-t border-[#1c1c1c] pt-8">
